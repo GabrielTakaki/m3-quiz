@@ -1,6 +1,9 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'expo-router';
+import { useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -14,7 +17,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import {zodResolver} from "@hookform/resolvers/zod";
+import { getFirebaseErrorMessage } from '@/lib/firebase-errors';
+import { useLoginMutation } from './services/login-service';
 
 const loginSchema = z.object({
   email: z
@@ -23,25 +27,31 @@ const loginSchema = z.object({
   password: z
     .string({ required_error: 'Informe sua senha.' })
     .min(6, 'A senha precisa ter ao menos 6 caracteres.'),
-  workspace: z
-    .string({ required_error: 'Selecione um espaço de trabalho.' })
-    .min(1, 'Selecione um espaço de trabalho.'),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginScreen() {
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const loginMutation = useLoginMutation();
+
   const methods = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: '',
       password: '',
-      workspace: '',
     },
   });
 
-  const handleLogin = methods.handleSubmit((values) => {
-    console.log('login', values);
+  const handleLogin = methods.handleSubmit(async (values) => {
+    setSubmitError(null);
+
+    try {
+      await loginMutation.mutateAsync(values);
+      Alert.alert('Login realizado', 'Você entrou com sucesso!');
+    } catch (error) {
+      setSubmitError(getFirebaseErrorMessage(error));
+    }
   });
 
   return (
@@ -56,7 +66,7 @@ export default function LoginScreen() {
             bounces={false}>
             <View style={styles.header}>
               <ThemedText type="title">Bem-vindo de volta</ThemedText>
-              <ThemedText>Entre para realizar quizzes fantásticos.</ThemedText>
+              <ThemedText>Entre para continuar criando e compartilhando quizzes.</ThemedText>
             </View>
 
             <FormProvider {...methods}>
@@ -78,7 +88,8 @@ export default function LoginScreen() {
                   autoCapitalize="none"
                   textContentType="password"
                 />
-                <Button title="Entrar" onPress={handleLogin} />
+                {submitError ? <ThemedText style={styles.submitError}>{submitError}</ThemedText> : null}
+                <Button title="Entrar" loading={loginMutation.isPending} onPress={handleLogin} />
               </View>
             </FormProvider>
 
@@ -126,5 +137,8 @@ const styles = StyleSheet.create({
   },
   link: {
     paddingVertical: 4,
+  },
+  submitError: {
+    color: '#dc2626',
   },
 });

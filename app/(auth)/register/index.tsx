@@ -1,6 +1,9 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'expo-router';
+import { useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -14,7 +17,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import {zodResolver} from "@hookform/resolvers/zod";
+import { getFirebaseErrorMessage } from '@/lib/firebase-errors';
+import { useRegisterMutation } from './services/register-service';
 
 const registerSchema = z.object({
   fullName: z
@@ -26,19 +30,27 @@ const registerSchema = z.object({
   password: z
     .string({ required_error: 'Crie uma senha.' })
     .min(6, 'A senha precisa ter ao menos 6 caracteres.'),
-  role: z.string({ required_error: 'Selecione uma função.' }).min(1, 'Selecione uma função.'),
 });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function RegisterScreen() {
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const registerMutation = useRegisterMutation();
+
   const methods = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { fullName: '', email: '', password: '', role: '' },
+    defaultValues: { fullName: '', email: '', password: '' },
   });
 
-  const handleRegister = methods.handleSubmit((values) => {
-    console.log('register', values);
+  const handleRegister = methods.handleSubmit(async (values) => {
+    setSubmitError(null);
+    try {
+      await registerMutation.mutateAsync(values);
+      Alert.alert('Conta criada', 'Seu cadastro foi concluído com sucesso!');
+    } catch (error) {
+      setSubmitError(getFirebaseErrorMessage(error));
+    }
   });
 
   return (
@@ -54,7 +66,7 @@ export default function RegisterScreen() {
             <View style={styles.header}>
               <ThemedText type="title">Crie sua conta</ThemedText>
               <ThemedText>
-                Configure seu perfil para ter acesso aos quizzes incríveis.
+                Configure seu perfil para começar a criar e compartilhar quizzes incríveis.
               </ThemedText>
             </View>
 
@@ -84,7 +96,8 @@ export default function RegisterScreen() {
                   autoCapitalize="none"
                   textContentType="password"
                 />
-                <Button title="Criar conta" onPress={handleRegister} />
+                {submitError ? <ThemedText style={styles.submitError}>{submitError}</ThemedText> : null}
+                <Button title="Criar conta" loading={registerMutation.isPending} onPress={handleRegister} />
               </View>
             </FormProvider>
 
@@ -132,5 +145,8 @@ const styles = StyleSheet.create({
   },
   link: {
     paddingVertical: 4,
+  },
+  submitError: {
+    color: '#dc2626',
   },
 });
