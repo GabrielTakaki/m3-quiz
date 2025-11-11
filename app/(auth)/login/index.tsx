@@ -12,10 +12,9 @@ import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, type SelectOption } from '@/components/ui/select';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { createZodResolver } from '@/lib/zod-resolver';
+import {zodResolver} from "@hookform/resolvers/zod";
 
 const loginSchema = z.object({
   email: z
@@ -30,17 +29,10 @@ const loginSchema = z.object({
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
-const loginResolver = createZodResolver(loginSchema);
-
-const workspaceOptions: SelectOption[] = [
-  { label: 'Espaço pessoal', value: 'personal' },
-  { label: 'Sala de aula', value: 'classroom' },
-  { label: 'Equipe', value: 'team' },
-];
 
 export default function LoginScreen() {
   const methods = useForm<LoginFormValues>({
-    resolver: loginResolver,
+    resolver: zodResolver(loginSchema),
     defaultValues: {
       email: '',
       password: '',

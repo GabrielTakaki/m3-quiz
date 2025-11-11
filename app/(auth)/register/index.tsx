@@ -12,10 +12,9 @@ import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, type SelectOption } from '@/components/ui/select';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { createZodResolver } from '@/lib/zod-resolver';
+import {zodResolver} from "@hookform/resolvers/zod";
 
 const registerSchema = z.object({
   fullName: z
@@ -31,17 +30,10 @@ const registerSchema = z.object({
 });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
-const registerResolver = createZodResolver(registerSchema);
-
-const roleOptions: SelectOption[] = [
-  { label: 'Estudante', value: 'student' },
-  { label: 'Professor(a)', value: 'teacher' },
-  { label: 'Líder de equipe', value: 'lead' },
-];
 
 export default function RegisterScreen() {
   const methods = useForm<RegisterFormValues>({
-    resolver: registerResolver,
+    resolver: zodResolver(registerSchema),
     defaultValues: { fullName: '', email: '', password: '', role: '' },
   });
 
