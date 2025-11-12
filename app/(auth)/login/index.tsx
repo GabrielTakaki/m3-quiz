@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import {
@@ -34,6 +34,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export default function LoginScreen() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const loginMutation = useLoginMutation();
+  const router = useRouter();
 
   const methods = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -49,6 +50,7 @@ export default function LoginScreen() {
     try {
       await loginMutation.mutateAsync(values);
       Alert.alert('Login realizado', 'Você entrou com sucesso!');
+      router.replace('/(protected)/(tabs)/home');
     } catch (error) {
       setSubmitError(getFirebaseErrorMessage(error));
     }

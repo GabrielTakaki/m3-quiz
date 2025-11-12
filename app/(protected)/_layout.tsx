@@ -3,7 +3,7 @@ import { ActivityIndicator, View } from 'react-native';
 
 import { useAuth } from '@/contexts/auth-context';
 
-export default function AuthLayout() {
+export default function ProtectedLayout() {
   const { isLoading, user } = useAuth();
 
   if (isLoading) {
@@ -14,15 +14,16 @@ export default function AuthLayout() {
     );
   }
 
-  if (user) {
-    return <Redirect href="/(protected)/(tabs)/home" />;
+  if (!user) {
+    return <Redirect href="/(auth)/login" />;
   }
 
   return (
     <Stack
       screenOptions={{
         headerShown: false,
-      }}
-    />
+      }}>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+    </Stack>
   );
 }

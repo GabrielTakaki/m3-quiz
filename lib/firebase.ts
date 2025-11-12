@@ -1,19 +1,27 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, getReactNativePersistence, initializeAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { Platform } from 'react-native';
 
 const firebaseConfig = {
-  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
-  measurementId: "G-CKNK3HEX29",
+    apiKey: "AIzaSyDo59tEzfzBpqqDtm9WM7Eq993DY9OAF74",
+    authDomain: "quiz-app-69215.firebaseapp.com",
+    projectId: "quiz-app-69215",
+    storageBucket: "quiz-app-69215.firebasestorage.app",
+    messagingSenderId: "234107421151",
+    appId: "1:234107421151:web:8c626e018a42e030c5446a",
+    measurementId: "G-CKNK3HEX29"
 };
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const existingApps = getApps();
+const app = existingApps.length ? getApp() : initializeApp(firebaseConfig);
 
 export const firebaseApp = app;
-export const auth = getAuth(app);
+export const auth =
+  Platform.OS === 'web' || existingApps.length
+    ? getAuth(app)
+    : initializeAuth(app, {
+        persistence: getReactNativePersistence(AsyncStorage),
+      });
 export const db = getFirestore(app);
