@@ -1,11 +1,20 @@
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { onAuthStateChanged, signOut, User } from 'firebase/auth';
+import {
+  ReactNode,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import { auth } from '@/lib/firebase';
 
 type AuthContextValue = {
   user: User | null;
   isLoading: boolean;
+  logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -13,6 +22,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const logout = useCallback(() => signOut(auth), []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -27,8 +37,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       user,
       isLoading,
+      logout,
     }),
-    [user, isLoading]
+    [user, isLoading, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

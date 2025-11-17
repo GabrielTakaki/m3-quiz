@@ -1,10 +1,7 @@
-import { FlatList, StyleSheet, View } from 'react-native';
-import { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
-import { BottomSheet } from '@/components/bottom-sheet';
-import { ClickableCard } from '@/components/clickable-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
@@ -12,24 +9,16 @@ import { useQuizStore } from '@/stores/quiz-store';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const unitOrder = useQuizStore((state) => state.unitOrder);
-  const units = useQuizStore((state) => state.units);
-  const startUnit = useQuizStore((state) => state.startUnit);
   const status = useQuizStore((state) => state.status);
   const activeUnitId = useQuizStore((state) => state.activeUnitId);
-  const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
+  const units = useQuizStore((state) => state.units);
+  const unitOrder = useQuizStore((state) => state.unitOrder);
 
-  const selectedUnit = selectedUnitId ? units[selectedUnitId] : undefined;
   const hasSession = status !== 'idle' && activeUnitId;
+  const totalQuestions = unitOrder.reduce((count, unitId) => count + units[unitId].itemIds.length, 0);
 
-  const handleStartUnit = () => {
-    if (!selectedUnit) {
-      return;
-    }
-
-    startUnit(selectedUnit.id);
-    setSelectedUnitId(null);
-    router.push('/(protected)/quiz');
+  const handleNavigateUnits = () => {
+    router.push('/(protected)/units-list');
   };
 
   const handleContinueSession = () => {
@@ -40,15 +29,43 @@ export default function HomeScreen() {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ThemedText type="title">Unidades disponíveis</ThemedText>
-        <ThemedText style={styles.subtitle}>
-          Selecione um conteúdo para praticar com questões derivadas dos arquivos C do repositório.
-        </ThemedText>
+        <View style={styles.hero}>
+          <ThemedText type="title">Bem-vindo!</ThemedText>
+          <ThemedText style={styles.subtitle}>
+            Organize seus estudos de C explorando unidades temáticas e acompanhe o seu desempenho.
+          </ThemedText>
+          <Button title="Ver unidades" onPress={handleNavigateUnits} />
+        </View>
+
+        <View style={styles.overviewCard}>
+          <ThemedText type="subtitle">Resumo rápido</ThemedText>
+          <View style={styles.overviewRow}>
+            <View>
+              <ThemedText type="defaultSemiBold">{unitOrder.length}</ThemedText>
+              <ThemedText>Unidades</ThemedText>
+            </View>
+            <View>
+              <ThemedText type="defaultSemiBold">{totalQuestions}</ThemedText>
+              <ThemedText>Questões</ThemedText>
+            </View>
+          </View>
+          <ThemedText style={styles.subtitle}>
+            Domine fundamentos, condicionais e laços com exercícios contextualizados.
+          </ThemedText>
+        </View>
+
+        <View style={styles.tipCard}>
+          <ThemedText type="defaultSemiBold">Dica de estudo</ThemedText>
+          <ThemedText>
+            Reserve blocos curtos de 15 minutos para praticar cada unidade e use os resultados para
+            identificar os temas que precisam de reforço.
+          </ThemedText>
+        </View>
 
         {hasSession && activeUnitId ? (
           <View style={styles.sessionCard}>
             <ThemedText type="defaultSemiBold">
-              Você parou em {units[activeUnitId].title}
+              Sessão em andamento: {units[activeUnitId].title}
             </ThemedText>
             <Button
               variant="outline"
@@ -57,50 +74,7 @@ export default function HomeScreen() {
             />
           </View>
         ) : null}
-
-        <FlatList
-          data={unitOrder}
-          contentContainerStyle={styles.listContent}
-          keyExtractor={(item) => item}
-          renderItem={({ item }) => {
-            const unit = units[item];
-            return (
-              <ClickableCard
-                key={unit.id}
-                title={unit.title}
-                description={unit.description}
-                difficulty={unit.difficulty}
-                ability={unit.ability}
-                itemCount={unit.itemIds.length}
-                onPress={() => setSelectedUnitId(unit.id)}
-              />
-            );
-          }}
-          ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
-        />
       </SafeAreaView>
-
-      <BottomSheet visible={Boolean(selectedUnit)} onClose={() => setSelectedUnitId(null)}>
-        {selectedUnit ? (
-          <>
-            <ThemedText type="title">{selectedUnit.title}</ThemedText>
-            <ThemedText>{selectedUnit.description}</ThemedText>
-
-            <View style={styles.metaRow}>
-              <ThemedText type="defaultSemiBold">
-                Dificuldade: {selectedUnit.difficulty}
-              </ThemedText>
-              <ThemedText type="defaultSemiBold">
-                Questões: {selectedUnit.itemIds.length}
-              </ThemedText>
-            </View>
-            <ThemedText type="defaultSemiBold">Habilidade: {selectedUnit.ability}</ThemedText>
-
-            <Button title="Começar unidade" onPress={handleStartUnit} />
-            <Button title="Cancelar" variant="ghost" onPress={() => setSelectedUnitId(null)} />
-          </>
-        ) : null}
-      </BottomSheet>
     </ThemedView>
   );
 }
@@ -112,14 +86,30 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     padding: 24,
-    gap: 16,
+    gap: 24,
+  },
+  hero: {
+    gap: 12,
   },
   subtitle: {
     opacity: 0.8,
   },
-  listContent: {
-    paddingBottom: 32,
-    gap: 16,
+  overviewCard: {
+    borderWidth: 1,
+    borderColor: 'rgba(13,139,255,0.2)',
+    borderRadius: 20,
+    padding: 20,
+    gap: 12,
+  },
+  overviewRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  tipCard: {
+    borderRadius: 16,
+    padding: 16,
+    backgroundColor: 'rgba(13,139,255,0.1)',
+    gap: 8,
   },
   sessionCard: {
     borderWidth: 1,
@@ -127,9 +117,5 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     gap: 12,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
   },
 });

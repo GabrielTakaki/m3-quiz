@@ -24,6 +24,7 @@ export default function ProtectedLayout() {
         headerShown: false,
       }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="units-list" options={{ headerShown: false }} />
       <Stack.Screen name="quiz" options={{ headerShown: false }} />
       <Stack.Screen name="quiz/results" options={{ headerShown: false }} />
     </Stack>
