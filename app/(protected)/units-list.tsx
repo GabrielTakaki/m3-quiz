@@ -14,7 +14,6 @@ export default function UnitsListScreen() {
   const router = useRouter();
   const unitOrder = useQuizStore((state) => state.unitOrder);
   const units = useQuizStore((state) => state.units);
-  const startUnit = useQuizStore((state) => state.startUnit);
   const status = useQuizStore((state) => state.status);
   const activeUnitId = useQuizStore((state) => state.activeUnitId);
   const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
@@ -27,9 +26,11 @@ export default function UnitsListScreen() {
       return;
     }
 
-    startUnit(selectedUnit.id);
+    router.push({
+      pathname: '/(protected)/unit-intro',
+      params: { unitId: selectedUnit.id },
+    });
     setSelectedUnitId(null);
-    router.push('/(protected)/quiz');
   };
 
   const handleContinueSession = () => {
