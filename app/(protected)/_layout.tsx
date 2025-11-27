@@ -8,8 +8,6 @@ export default function ProtectedLayout() {
   const { isLoading, user } = useAuth();
   useUnits({ enabled: Boolean(user) });
 
-  console.log("hererererere")
-
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
