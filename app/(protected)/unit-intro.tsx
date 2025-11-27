@@ -14,6 +14,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
+import { useUnits } from '@/hooks/use-units';
 import { useQuizStore } from '@/stores/quiz-store';
 
 export default function UnitIntroScreen() {

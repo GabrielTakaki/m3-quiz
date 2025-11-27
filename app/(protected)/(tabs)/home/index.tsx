@@ -5,14 +5,17 @@ import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
+import { useUnits } from '@/hooks/use-units';
 import { useQuizStore } from '@/stores/quiz-store';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { isLoading, isError, refetch } = useUnits();
   const status = useQuizStore((state) => state.status);
   const activeUnitId = useQuizStore((state) => state.activeUnitId);
   const units = useQuizStore((state) => state.units);
   const unitOrder = useQuizStore((state) => state.unitOrder);
+  const isUnitsReady = useQuizStore((state) => state.isUnitsReady);
 
   const hasSession = status !== 'idle' && activeUnitId;
   const totalQuestions = unitOrder.reduce((count, unitId) => count + units[unitId].itemIds.length, 0);
@@ -41,11 +44,15 @@ export default function HomeScreen() {
           <ThemedText type="subtitle">Resumo rápido</ThemedText>
           <View style={styles.overviewRow}>
             <View>
-              <ThemedText type="defaultSemiBold">{unitOrder.length}</ThemedText>
+              <ThemedText type="defaultSemiBold">
+                {isUnitsReady ? unitOrder.length : '–'}
+              </ThemedText>
               <ThemedText>Unidades</ThemedText>
             </View>
             <View>
-              <ThemedText type="defaultSemiBold">{totalQuestions}</ThemedText>
+              <ThemedText type="defaultSemiBold">
+                {isUnitsReady ? totalQuestions : '–'}
+              </ThemedText>
               <ThemedText>Questões</ThemedText>
             </View>
           </View>
@@ -61,6 +68,16 @@ export default function HomeScreen() {
             identificar os temas que precisam de reforço.
           </ThemedText>
         </View>
+
+        {!isUnitsReady && isLoading ? (
+          <ThemedText>Buscando unidades no Firebase...</ThemedText>
+        ) : null}
+        {!isUnitsReady && isError ? (
+          <View style={styles.sessionCard}>
+            <ThemedText>Não foi possível carregar as unidades.</ThemedText>
+            <Button title="Tentar novamente" variant="outline" onPress={() => refetch()} />
+          </View>
+        ) : null}
 
         {hasSession && activeUnitId ? (
           <View style={styles.sessionCard}>

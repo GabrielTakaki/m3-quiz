@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import { quizUnits, type QuizItemDefinition, type QuizUnitDefinition } from '@/constants/quiz-data';
+import { type QuizItemDefinition, type QuizUnitDefinition } from '@/constants/quiz-data';
 
 interface QuizItem extends QuizItemDefinition {
   unitId: string;
@@ -26,6 +26,8 @@ interface QuizState {
   answers: Record<string, string>;
   results?: QuizResults;
   status: QuizStatus;
+  isUnitsReady: boolean;
+  hydrateUnits: (definitions: QuizUnitDefinition[]) => void;
   startUnit: (unitId: string) => void;
   answerItem: (itemId: string, optionId: string) => void;
   goToNext: () => void;
@@ -34,42 +36,62 @@ interface QuizState {
   resetSession: () => void;
 }
 
-const unitOrder = quizUnits.map((unit) => unit.id);
+function normalizeUnits(quizUnits: QuizUnitDefinition[]) {
+  const unitOrder = quizUnits.map((unit) => unit.id);
 
-const units: Record<string, QuizUnit> = {};
-const items: Record<string, QuizItem> = {};
+  const units: Record<string, QuizUnit> = {};
+  const items: Record<string, QuizItem> = {};
 
-quizUnits.forEach((unit) => {
-  const { items: unitItems, ...metadata } = unit;
-  const itemIds: string[] = [];
+  quizUnits.forEach((unit) => {
+    const { items: unitItems, ...metadata } = unit;
+    const itemIds: string[] = [];
 
-  unitItems.forEach((item) => {
-    const normalizedItem: QuizItem = {
-      ...item,
-      unitId: unit.id,
+    unitItems.forEach((item) => {
+      const normalizedItem: QuizItem = {
+        ...item,
+        unitId: unit.id,
+      };
+
+      items[item.id] = normalizedItem;
+      itemIds.push(item.id);
+    });
+
+    units[unit.id] = {
+      ...metadata,
+      itemIds,
     };
-
-    items[item.id] = normalizedItem;
-    itemIds.push(item.id);
   });
 
-  units[unit.id] = {
-    ...metadata,
-    itemIds,
-  };
-});
+  return { unitOrder, units, items };
+}
 
 export const useQuizStore = create<QuizState>((set, get) => ({
-  unitOrder,
-  units,
-  items,
+  unitOrder: [],
+  units: {},
+  items: {},
   activeUnitId: undefined,
   currentIndex: 0,
   answers: {},
   results: undefined,
   status: 'idle',
+  isUnitsReady: false,
+  hydrateUnits: (definitions) => {
+    const normalized = normalizeUnits(definitions);
+
+    set({
+      ...normalized,
+      activeUnitId: undefined,
+      currentIndex: 0,
+      answers: {},
+      results: undefined,
+      status: 'idle',
+      isUnitsReady: true,
+    });
+  },
   startUnit: (unitId) => {
-    if (!units[unitId]) {
+    const state = get();
+
+    if (!state.units[unitId]) {
       return;
     }
 

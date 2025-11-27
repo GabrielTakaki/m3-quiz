@@ -8,14 +8,17 @@ import { ClickableCard } from '@/components/clickable-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
+import { useUnits } from '@/hooks/use-units';
 import { useQuizStore } from '@/stores/quiz-store';
 
 export default function UnitsListScreen() {
   const router = useRouter();
+  const { isLoading, isError, refetch } = useUnits();
   const unitOrder = useQuizStore((state) => state.unitOrder);
   const units = useQuizStore((state) => state.units);
   const status = useQuizStore((state) => state.status);
   const activeUnitId = useQuizStore((state) => state.activeUnitId);
+  const isUnitsReady = useQuizStore((state) => state.isUnitsReady);
   const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
 
   const selectedUnit = selectedUnitId ? units[selectedUnitId] : undefined;
@@ -45,6 +48,15 @@ export default function UnitsListScreen() {
         <ThemedText style={styles.subtitle}>
           Selecione um conteúdo para praticar com questões derivadas dos arquivos C do repositório.
         </ThemedText>
+
+        {!isUnitsReady && isLoading ? <ThemedText>Carregando unidades...</ThemedText> : null}
+
+        {!isUnitsReady && isError ? (
+          <View style={styles.sessionCard}>
+            <ThemedText>Não foi possível carregar as unidades.</ThemedText>
+            <Button title="Tentar novamente" onPress={() => refetch()} />
+          </View>
+        ) : null}
 
         {hasSession && activeUnitId ? (
           <View style={styles.sessionCard}>
