@@ -11,10 +11,13 @@ import { Fonts } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
 import { useUnits } from '@/hooks/use-units';
 import { useUnitProgress } from '@/hooks/use-unit-progress';
-import { markItemCompleted, markUnitCompleted } from '@/services/student-units.service';
+import { markUnitCompleted, saveAnswer } from '@/services/student-units.service';
 import { useQuizStore } from '@/stores/quiz-store';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function QuizScreen() {
+  const qc = useQueryClient();
+
   const router = useRouter();
   const { user } = useAuth();
   useUnits();
@@ -28,7 +31,7 @@ export default function QuizScreen() {
   const goToPrevious = useQuizStore((state) => state.goToPrevious);
   const finishUnit = useQuizStore((state) => state.finishUnit);
   const resetSession = useQuizStore((state) => state.resetSession);
-  const { progress } = useUnitProgress(activeUnitId);
+  useUnitProgress(activeUnitId);
 
   useEffect(() => {
     if (!activeUnitId) {
@@ -45,9 +48,27 @@ export default function QuizScreen() {
   const currentItem = items[currentItemId];
   const userAnswer = answers[currentItemId];
   const isLastQuestion = currentIndex === unit.itemIds.length - 1;
+  const answeredCount = Object.values(answers).filter(Boolean).length;
 
-  const handleSelect = (optionId: string) => {
+  const handleSelect = async (optionId: string) => {
     answerItem(currentItemId, optionId);
+
+    if (user) {
+      const nextItemsCompleted = Math.min(
+        unit.itemIds.length,
+        answeredCount + (userAnswer ? 0 : 1)
+      );
+
+      await saveAnswer(
+        user.uid,
+        unit.id,
+        currentItemId,
+        optionId,
+        optionId === currentItem.correctOptionId,
+        nextItemsCompleted
+      );
+      await qc.invalidateQueries({ queryKey: ['student-units', user.uid] });
+    }
   };
 
   const handleExit = () => {
@@ -60,14 +81,10 @@ export default function QuizScreen() {
       return;
     }
 
-    if (user) {
-      const itemsCompleted = Math.max(progress?.itemsCompleted ?? 0, currentIndex + 1);
-      await markItemCompleted(user.uid, unit.id, itemsCompleted);
-    }
-
     if (isLastQuestion) {
       if (user) {
         await markUnitCompleted(user.uid, unit.id, unit.itemIds.length);
+        qc.invalidateQueries({ queryKey: ['student-units', user.uid] });
       }
       finishUnit();
       router.replace('/(protected)/quiz/results');

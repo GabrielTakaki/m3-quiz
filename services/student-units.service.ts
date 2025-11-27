@@ -7,6 +7,13 @@ export interface StudentUnitProgress {
   status: 'not-started' | 'in-progress' | 'completed';
   itemsCompleted: number;
   totalItems: number;
+  answers: Record<
+    string,
+    {
+      selectedOptionId: string | null;
+      isCorrect: boolean | null;
+    }
+  >;
   updatedAt: Date;
 }
 
@@ -33,6 +40,7 @@ export async function getStudentUnitsProgress(userId: string): Promise<StudentUn
       status: (data.status as StudentUnitProgress['status']) ?? 'not-started',
       itemsCompleted: data.itemsCompleted ?? 0,
       totalItems: data.totalItems ?? 0,
+      answers: data.answers ?? {},
       updatedAt: toDate(data.updatedAt),
     };
   });
@@ -55,6 +63,33 @@ export async function updateUnitProgress(
   );
 }
 
+export async function saveAnswer(
+  userId: string,
+  unitId: string,
+  itemId: string,
+  selectedOptionId: string,
+  isCorrect: boolean,
+  itemsCompleted?: number
+) {
+  const docRef = doc(db, 'students', userId, 'units', unitId);
+
+  await setDoc(
+    docRef,
+    {
+      unitId,
+      answers: {
+        [itemId]: {
+          selectedOptionId,
+          isCorrect,
+        },
+      },
+      ...(itemsCompleted !== undefined ? { itemsCompleted } : {}),
+      updatedAt: new Date(),
+    },
+    { merge: true }
+  );
+}
+
 export async function markUnitStarted(
   userId: string,
   unitId: string,
@@ -64,6 +99,7 @@ export async function markUnitStarted(
     status: 'in-progress',
     itemsCompleted: 0,
     totalItems,
+    answers: {},
   });
 }
 

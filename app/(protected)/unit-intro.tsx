@@ -23,7 +23,7 @@ export default function UnitIntroScreen() {
   const router = useRouter();
   const { unitId, startIndex: startIndexParam } = useLocalSearchParams<{ unitId?: string; startIndex?: string }>();
   const { user } = useAuth();
-  const { status, nextItemIndex } = useUnitProgress(unitId);
+  const { progress, status, nextItemIndex } = useUnitProgress(unitId);
   const units = useQuizStore((state) => state.units);
   const startUnit = useQuizStore((state) => state.startUnit);
   const [containerHeight, setContainerHeight] = useState(0);
@@ -70,13 +70,22 @@ export default function UnitIntroScreen() {
   const handleStart = async () => {
     const parsedStart = Number(startIndexParam);
     const startIndex = Number.isFinite(parsedStart) ? parsedStart : nextItemIndex;
+    const initialAnswers: Record<string, string> = {};
+
+    if (progress?.answers && status === 'in-progress') {
+      Object.entries(progress.answers).forEach(([itemId, answer]) => {
+        if (answer.selectedOptionId) {
+          initialAnswers[itemId] = answer.selectedOptionId;
+        }
+      });
+    }
 
     if (user) {
       if (status === 'not-started' || status === 'completed') {
         await markUnitStarted(user.uid, unit.id, unit.itemIds.length);
       }
     }
-    startUnit(unit.id, startIndex);
+    startUnit(unit.id, startIndex, initialAnswers);
     router.replace('/(protected)/quiz');
   };
 

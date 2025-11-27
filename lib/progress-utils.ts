@@ -8,6 +8,11 @@ export function getNextItemIndex(
     return 0;
   }
 
+  const answeredCount = progress.answers
+    ? Object.values(progress.answers).filter((ans) => ans?.selectedOptionId).length
+    : 0;
+  const effectiveCompleted = Math.max(progress.itemsCompleted ?? 0, answeredCount);
+
   if (progress.status === 'completed') {
     return 0;
   }
@@ -16,5 +21,5 @@ export function getNextItemIndex(
     return 0;
   }
 
-  return Math.max(0, Math.min(progress.itemsCompleted, totalItems - 1));
+  return Math.max(0, Math.min(effectiveCompleted, totalItems - 1));
 }
