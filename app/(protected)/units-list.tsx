@@ -8,12 +8,18 @@ import { ClickableCard } from '@/components/clickable-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/auth-context';
+import { useStudentUnits } from '@/hooks/use-student-units';
 import { useUnits } from '@/hooks/use-units';
+import { getNextItemIndex } from '@/lib/progress-utils';
+import { type StudentUnitProgress } from '@/services/student-units.service';
 import { useQuizStore } from '@/stores/quiz-store';
 
 export default function UnitsListScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const { isLoading, isError, refetch } = useUnits();
+  const { data: studentProgress } = useStudentUnits(user?.uid);
   const unitOrder = useQuizStore((state) => state.unitOrder);
   const units = useQuizStore((state) => state.units);
   const status = useQuizStore((state) => state.status);
@@ -23,15 +29,23 @@ export default function UnitsListScreen() {
 
   const selectedUnit = selectedUnitId ? units[selectedUnitId] : undefined;
   const hasSession = status !== 'idle' && activeUnitId;
+  const progressMap =
+    studentProgress?.reduce<Record<string, StudentUnitProgress>>((acc, item) => {
+      acc[item.unitId] = item;
+      return acc;
+    }, {}) ?? {};
 
   const handleStartUnit = () => {
     if (!selectedUnit) {
       return;
     }
 
+    const selectedProgress = progressMap[selectedUnit.id];
+    const startIndex = getNextItemIndex(selectedProgress ?? null, selectedUnit.itemIds.length);
+
     router.push({
       pathname: '/(protected)/unit-intro',
-      params: { unitId: selectedUnit.id },
+      params: { unitId: selectedUnit.id, startIndex: String(startIndex) },
     });
     setSelectedUnitId(null);
   };
@@ -77,6 +91,7 @@ export default function UnitsListScreen() {
           keyExtractor={(item) => item}
           renderItem={({ item }) => {
             const unit = units[item];
+            const progress = progressMap[unit.id];
             return (
               <ClickableCard
                 title={unit.title}
@@ -84,6 +99,8 @@ export default function UnitsListScreen() {
                 difficulty={unit.difficulty}
                 ability={unit.ability}
                 itemCount={unit.itemIds.length}
+                status={progress?.status ?? 'not-started'}
+                itemsCompleted={progress?.itemsCompleted ?? 0}
                 onPress={() => setSelectedUnitId(unit.id)}
               />
             );

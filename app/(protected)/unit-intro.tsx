@@ -15,13 +15,15 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/auth-context';
+import { useUnitProgress } from '@/hooks/use-unit-progress';
 import { markUnitStarted } from '@/services/student-units.service';
 import { useQuizStore } from '@/stores/quiz-store';
 
 export default function UnitIntroScreen() {
   const router = useRouter();
-  const { unitId } = useLocalSearchParams<{ unitId?: string }>();
+  const { unitId, startIndex: startIndexParam } = useLocalSearchParams<{ unitId?: string; startIndex?: string }>();
   const { user } = useAuth();
+  const { status, nextItemIndex } = useUnitProgress(unitId);
   const units = useQuizStore((state) => state.units);
   const startUnit = useQuizStore((state) => state.startUnit);
   const [containerHeight, setContainerHeight] = useState(0);
@@ -66,10 +68,15 @@ export default function UnitIntroScreen() {
   };
 
   const handleStart = async () => {
+    const parsedStart = Number(startIndexParam);
+    const startIndex = Number.isFinite(parsedStart) ? parsedStart : nextItemIndex;
+
     if (user) {
-      await markUnitStarted(user.uid, unit.id, unit.itemIds.length);
+      if (status === 'not-started' || status === 'completed') {
+        await markUnitStarted(user.uid, unit.id, unit.itemIds.length);
+      }
     }
-    startUnit(unit.id);
+    startUnit(unit.id, startIndex);
     router.replace('/(protected)/quiz');
   };
 

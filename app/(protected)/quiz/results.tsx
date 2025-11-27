@@ -6,11 +6,15 @@ import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/auth-context';
 import { useUnits } from '@/hooks/use-units';
+import { markUnitStarted } from '@/services/student-units.service';
 import { useQuizStore } from '@/stores/quiz-store';
 
 export default function ResultsScreen() {
   const router = useRouter();
+  const { user } = useAuth();
+  useUnits();
   const results = useQuizStore((state) => state.results);
   const status = useQuizStore((state) => state.status);
   const activeUnitId = useQuizStore((state) => state.activeUnitId);
@@ -32,8 +36,11 @@ export default function ResultsScreen() {
   const incorrect = results.total - results.correct;
   const percentage = Math.round((results.correct / results.total) * 100);
 
-  const handleRetry = () => {
-    startUnit(unit.id);
+  const handleRetry = async () => {
+    if (user) {
+      await markUnitStarted(user.uid, unit.id, unit.itemIds.length);
+    }
+    startUnit(unit.id, 0);
     router.replace('/(protected)/quiz');
   };
 

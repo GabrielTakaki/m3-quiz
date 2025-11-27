@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Fonts } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
 import { useUnits } from '@/hooks/use-units';
+import { useUnitProgress } from '@/hooks/use-unit-progress';
 import { markItemCompleted, markUnitCompleted } from '@/services/student-units.service';
 import { useQuizStore } from '@/stores/quiz-store';
 
@@ -27,6 +28,7 @@ export default function QuizScreen() {
   const goToPrevious = useQuizStore((state) => state.goToPrevious);
   const finishUnit = useQuizStore((state) => state.finishUnit);
   const resetSession = useQuizStore((state) => state.resetSession);
+  const { progress } = useUnitProgress(activeUnitId);
 
   useEffect(() => {
     if (!activeUnitId) {
@@ -59,7 +61,7 @@ export default function QuizScreen() {
     }
 
     if (user) {
-      const itemsCompleted = Math.min(currentIndex + 1, unit.itemIds.length);
+      const itemsCompleted = Math.max(progress?.itemsCompleted ?? 0, currentIndex + 1);
       await markItemCompleted(user.uid, unit.id, itemsCompleted);
     }
 

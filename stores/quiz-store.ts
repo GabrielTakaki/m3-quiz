@@ -28,7 +28,7 @@ interface QuizState {
   status: QuizStatus;
   isUnitsReady: boolean;
   hydrateUnits: (definitions: QuizUnitDefinition[]) => void;
-  startUnit: (unitId: string) => void;
+  startUnit: (unitId: string, startIndex?: number) => void;
   answerItem: (itemId: string, optionId: string) => void;
   goToNext: () => void;
   goToPrevious: () => void;
@@ -88,7 +88,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
       isUnitsReady: true,
     });
   },
-  startUnit: (unitId) => {
+  startUnit: (unitId, startIndex = 0) => {
     const state = get();
 
     if (!state.units[unitId]) {
@@ -97,7 +97,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
 
     set({
       activeUnitId: unitId,
-      currentIndex: 0,
+      currentIndex: Math.max(0, Math.min(startIndex, state.units[unitId].itemIds.length - 1)),
       answers: {},
       results: undefined,
       status: 'in-progress',
