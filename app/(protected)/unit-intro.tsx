@@ -14,12 +14,14 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
-import { useUnits } from '@/hooks/use-units';
+import { useAuth } from '@/contexts/auth-context';
+import { markUnitStarted } from '@/services/student-units.service';
 import { useQuizStore } from '@/stores/quiz-store';
 
 export default function UnitIntroScreen() {
   const router = useRouter();
   const { unitId } = useLocalSearchParams<{ unitId?: string }>();
+  const { user } = useAuth();
   const units = useQuizStore((state) => state.units);
   const startUnit = useQuizStore((state) => state.startUnit);
   const [containerHeight, setContainerHeight] = useState(0);
@@ -63,7 +65,10 @@ export default function UnitIntroScreen() {
     setContentHeight(height);
   };
 
-  const handleStart = () => {
+  const handleStart = async () => {
+    if (user) {
+      await markUnitStarted(user.uid, unit.id, unit.itemIds.length);
+    }
     startUnit(unit.id);
     router.replace('/(protected)/quiz');
   };

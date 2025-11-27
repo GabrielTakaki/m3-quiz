@@ -8,10 +8,15 @@ import { ThemedView } from '@/components/themed-view';
 import { OptionButton } from '@/components/quiz/option-button';
 import { Button } from '@/components/ui/button';
 import { Fonts } from '@/constants/theme';
+import { useAuth } from '@/contexts/auth-context';
+import { useUnits } from '@/hooks/use-units';
+import { markItemCompleted, markUnitCompleted } from '@/services/student-units.service';
 import { useQuizStore } from '@/stores/quiz-store';
 
 export default function QuizScreen() {
   const router = useRouter();
+  const { user } = useAuth();
+  useUnits();
   const activeUnitId = useQuizStore((state) => state.activeUnitId);
   const units = useQuizStore((state) => state.units);
   const items = useQuizStore((state) => state.items);
@@ -48,12 +53,20 @@ export default function QuizScreen() {
     router.replace('/(protected)/(tabs)/home');
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!userAnswer) {
       return;
     }
 
+    if (user) {
+      const itemsCompleted = Math.min(currentIndex + 1, unit.itemIds.length);
+      await markItemCompleted(user.uid, unit.id, itemsCompleted);
+    }
+
     if (isLastQuestion) {
+      if (user) {
+        await markUnitCompleted(user.uid, unit.id, unit.itemIds.length);
+      }
       finishUnit();
       router.replace('/(protected)/quiz/results');
       return;

@@ -2,11 +2,13 @@ import { Redirect, Stack } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
 
 import { useAuth } from '@/contexts/auth-context';
+import { useStudentUnits } from '@/hooks/use-student-units';
 import { useUnits } from '@/hooks/use-units';
 
 export default function ProtectedLayout() {
   const { isLoading, user } = useAuth();
   useUnits({ enabled: Boolean(user) });
+  useStudentUnits(user?.uid);
 
   if (isLoading) {
     return (
