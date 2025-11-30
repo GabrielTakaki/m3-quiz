@@ -13,7 +13,7 @@ export function getNextItemIndex(
     : 0;
   const effectiveCompleted = Math.max(progress.itemsCompleted ?? 0, answeredCount);
 
-  if (progress.status === 'completed') {
+  if (progress.status === 'completed' || progress.status === 'failed') {
     return 0;
   }
 

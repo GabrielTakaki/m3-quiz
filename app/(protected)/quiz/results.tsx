@@ -34,7 +34,8 @@ export default function ResultsScreen() {
 
   const unit = units[activeUnitId];
   const incorrect = results.total - results.correct;
-  const percentage = Math.round((results.correct / results.total) * 100);
+  const percentage = results.total > 0 ? Math.round((results.correct / results.total) * 100) : 0;
+  const isApproved = percentage >= 70;
 
   const handleRetry = async () => {
     if (user) {
@@ -56,6 +57,15 @@ export default function ResultsScreen() {
         <ThemedText type="defaultSemiBold">{unit.title}</ThemedText>
 
         <View style={styles.card}>
+          <View
+            style={[
+              styles.statusPill,
+              { backgroundColor: isApproved ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)' },
+            ]}>
+            <ThemedText style={[styles.statusText, { color: isApproved ? '#166534' : '#991b1b' }]}>
+              {isApproved ? 'Aprovada' : 'Reprovada'}
+            </ThemedText>
+          </View>
           <ThemedText type="subtitle">{percentage}% de aproveitamento</ThemedText>
           <View style={styles.row}>
             <ThemedText>Corretas</ThemedText>
@@ -71,7 +81,7 @@ export default function ResultsScreen() {
           </View>
         </View>
 
-        <Button title="Tentar novamente" onPress={handleRetry} />
+        {!isApproved ? <Button title="Tentar novamente" onPress={handleRetry} /> : null}
         <Button title="Voltar para início" variant="outline" onPress={handleBackHome} />
       </SafeAreaView>
     </ThemedView>
@@ -93,6 +103,15 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 24,
     gap: 12,
+  },
+  statusPill: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  statusText: {
+    fontWeight: '700',
   },
   row: {
     flexDirection: 'row',

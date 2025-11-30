@@ -11,22 +11,14 @@ import { useQuizStore } from '@/stores/quiz-store';
 export default function HomeScreen() {
   const router = useRouter();
   const { isLoading, isError, refetch } = useUnits();
-  const status = useQuizStore((state) => state.status);
-  const activeUnitId = useQuizStore((state) => state.activeUnitId);
   const units = useQuizStore((state) => state.units);
   const unitOrder = useQuizStore((state) => state.unitOrder);
   const isUnitsReady = useQuizStore((state) => state.isUnitsReady);
 
-  const hasSession = status !== 'idle' && activeUnitId;
   const totalQuestions = unitOrder.reduce((count, unitId) => count + units[unitId].itemIds.length, 0);
 
   const handleNavigateUnits = () => {
     router.push('/(protected)/units-list');
-  };
-
-  const handleContinueSession = () => {
-    const destination = status === 'finished' ? '/(protected)/quiz/results' : '/(protected)/quiz';
-    router.push(destination);
   };
 
   return (
@@ -76,19 +68,6 @@ export default function HomeScreen() {
           <View style={styles.sessionCard}>
             <ThemedText>Não foi possível carregar as unidades.</ThemedText>
             <Button title="Tentar novamente" variant="outline" onPress={() => refetch()} />
-          </View>
-        ) : null}
-
-        {hasSession && activeUnitId ? (
-          <View style={styles.sessionCard}>
-            <ThemedText type="defaultSemiBold">
-              Sessão em andamento: {units[activeUnitId].title}
-            </ThemedText>
-            <Button
-              variant="outline"
-              title={status === 'finished' ? 'Ver resultados' : 'Retomar quiz'}
-              onPress={handleContinueSession}
-            />
           </View>
         ) : null}
       </SafeAreaView>

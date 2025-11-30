@@ -4,7 +4,7 @@ import { db } from '@/lib/firebase';
 
 export interface StudentUnitProgress {
   unitId: string;
-  status: 'not-started' | 'in-progress' | 'completed';
+  status: 'not-started' | 'in-progress' | 'completed' | 'failed';
   itemsCompleted: number;
   totalItems: number;
   answers: Record<
@@ -120,6 +120,18 @@ export async function markUnitCompleted(
 ): Promise<void> {
   await updateUnitProgress(userId, unitId, {
     status: 'completed',
+    itemsCompleted: totalItems,
+    totalItems,
+  });
+}
+
+export async function markUnitFailed(
+  userId: string,
+  unitId: string,
+  totalItems: number
+): Promise<void> {
+  await updateUnitProgress(userId, unitId, {
+    status: 'failed',
     itemsCompleted: totalItems,
     totalItems,
   });

@@ -11,7 +11,7 @@ import { Fonts } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
 import { useUnits } from '@/hooks/use-units';
 import { useUnitProgress } from '@/hooks/use-unit-progress';
-import { markUnitCompleted, saveAnswer } from '@/services/student-units.service';
+import { markUnitCompleted, markUnitFailed, saveAnswer } from '@/services/student-units.service';
 import { useQuizStore } from '@/stores/quiz-store';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -83,7 +83,18 @@ export default function QuizScreen() {
 
     if (isLastQuestion) {
       if (user) {
-        await markUnitCompleted(user.uid, unit.id, unit.itemIds.length);
+        const totalItems = unit.itemIds.length;
+        const correctCount = unit.itemIds.reduce((count, id) => {
+          const item = items[id];
+          return count + (answers[id] === item.correctOptionId ? 1 : 0);
+        }, 0);
+        const percentage = totalItems > 0 ? Math.round((correctCount / totalItems) * 100) : 0;
+
+        if (percentage < 70) {
+          await markUnitFailed(user.uid, unit.id, totalItems);
+        } else {
+          await markUnitCompleted(user.uid, unit.id, totalItems);
+        }
         qc.invalidateQueries({ queryKey: ['student-units', user.uid] });
       }
       finishUnit();

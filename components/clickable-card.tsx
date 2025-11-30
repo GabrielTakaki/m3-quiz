@@ -10,7 +10,7 @@ type ClickableCardProps = {
   difficulty: string;
   ability: string;
   itemCount: number;
-  status?: 'not-started' | 'in-progress' | 'completed';
+  status?: 'not-started' | 'in-progress' | 'completed' | 'failed';
   itemsCompleted?: number;
   onPress: () => void;
 };
@@ -44,6 +44,11 @@ export function ClickableCard({
       label: 'Concluída',
       background: 'rgba(34,197,94,0.2)',
       text: '#166534',
+    },
+    failed: {
+      label: 'Reprovada',
+      background: 'rgba(239,68,68,0.2)',
+      text: '#991b1b',
     },
   }[status];
 

@@ -23,14 +23,12 @@ export default function UnitsListScreen() {
   const unitOrder = useQuizStore((state) => state.unitOrder);
   const units = useQuizStore((state) => state.units);
   const status = useQuizStore((state) => state.status);
-  const activeUnitId = useQuizStore((state) => state.activeUnitId);
   const isUnitsReady = useQuizStore((state) => state.isUnitsReady);
   const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
 
   const selectedUnit = selectedUnitId ? units[selectedUnitId] : undefined;
-  const hasSession = status !== 'idle' && activeUnitId;
   const progressMap =
-    studentProgress?.reduce<Record<string, StudentUnitProgress>>((acc, item) => {
+    (studentProgress as any[])?.reduce<Record<string, StudentUnitProgress>>((acc, item) => {
       acc[item.unitId] = item;
       return acc;
     }, {}) ?? {};
@@ -50,11 +48,6 @@ export default function UnitsListScreen() {
     setSelectedUnitId(null);
   };
 
-  const handleContinueSession = () => {
-    const destination = status === 'finished' ? '/(protected)/quiz/results' : '/(protected)/quiz';
-    router.push(destination);
-  };
-
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -69,19 +62,6 @@ export default function UnitsListScreen() {
           <View style={styles.sessionCard}>
             <ThemedText>Não foi possível carregar as unidades.</ThemedText>
             <Button title="Tentar novamente" onPress={() => refetch()} />
-          </View>
-        ) : null}
-
-        {hasSession && activeUnitId ? (
-          <View style={styles.sessionCard}>
-            <ThemedText type="defaultSemiBold">
-              Você parou em {units[activeUnitId].title}
-            </ThemedText>
-            <Button
-              variant="outline"
-              title={status === 'finished' ? 'Ver resultados' : 'Retomar quiz'}
-              onPress={handleContinueSession}
-            />
           </View>
         ) : null}
 

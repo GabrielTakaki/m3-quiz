@@ -65,6 +65,14 @@ export default function UnitIntroScreen() {
     'Analise o código: procure mudanças de estado, ponteiros e ordem de execução.',
     'Marque sua resposta: escolha a opção mais consistente com a execução prevista.',
   ];
+  const statusLabel =
+    status === 'completed' ? 'Revisão' : status === 'failed' ? 'Reprovação' : 'Preparação';
+  const statusHint =
+    status === 'completed'
+      ? 'refaça para fixar'
+      : status === 'failed'
+        ? 'tente novamente para alcançar 70%'
+        : 'comece do início';
   const neutralBorder = colorScheme === 'dark' ? 'rgba(148,163,184,0.45)' : 'rgba(148,163,184,0.35)';
   const infoBackground = colorScheme === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(148,163,184,0.08)';
   const summaryBackground = colorScheme === 'dark' ? 'rgba(61,124,255,0.15)' : 'rgba(13,139,255,0.08)';
@@ -108,7 +116,7 @@ export default function UnitIntroScreen() {
     }
 
     if (user) {
-      if (status === 'not-started' || status === 'completed') {
+      if (status === 'not-started' || status === 'completed' || status === 'failed') {
         await markUnitStarted(user.uid, unit.id, unit.itemIds.length);
       }
     }
@@ -171,10 +179,10 @@ export default function UnitIntroScreen() {
               </View>
               <View style={[styles.metric, { backgroundColor: metricBackground, borderColor: neutralBorder }]}>
                 <ThemedText type="defaultSemiBold" style={styles.metricValue}>
-                  {status === 'completed' ? 'Revisão' : 'Preparação'}
+                  {statusLabel}
                 </ThemedText>
                 <ThemedText style={styles.metricLabel}>
-                  {status === 'completed' ? 'refaça para fixar' : 'comece do início'}
+                  {statusHint}
                 </ThemedText>
               </View>
             </View>
