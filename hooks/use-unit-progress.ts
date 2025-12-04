@@ -24,7 +24,7 @@ export function useUnitProgress(unitId?: string): UseUnitProgressResult {
       return {};
     }
 
-    return studentUnits.reduce<Record<string, StudentUnitProgress>>((acc, item) => {
+    return (studentUnits as any[]).reduce<Record<string, StudentUnitProgress>>((acc, item) => {
       acc[item.unitId] = item;
       return acc;
     }, {});
